@@ -28,6 +28,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import dagger.android.support.AndroidSupportInjection;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
 /**
@@ -35,48 +36,41 @@ import java.util.ArrayList;
  */
 
 public abstract class BaseFragment<V extends MvpView> extends Fragment implements MvpView {
-
+    
     // Dialogs:
     private ProgressDialog progressDialog;
     private ArrayList<Dialog> dialogs;
-
+    
     // Other:
     private boolean isDestroyedBySystem;
     @Nullable private MvpPresenter<V> basePresenter;
+    @Nullable private WeakReference<V> presenterView;
     public Context context;
     private BaseActivity mActivity;
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
+    
+    @Override public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(false);
         dialogs = new ArrayList<Dialog>(2);
     }
-
-
-    @Nullable
-    @Override
+    
+    @Nullable @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-       return getLayoutInflater().inflate(getLayoutId(), container, false);
+        return getLayoutInflater().inflate(getLayoutId(), container, false);
     }
-
-    @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    
+    @Override public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         initView();
     }
-
-
-    @Override
-    public void onStart() {
+    
+    @Override public void onStart() {
         super.onStart();
-        if (basePresenter != null) {
-            basePresenter.bindView(getPresenterView());
+        if (basePresenter != null && presenterView != null && presenterView.get() != null) {
+            basePresenter.bindView(presenterView.get());
         }
     }
-
-
-    @Override
-    public void onAttach(Context context) {
+    
+    @Override public void onAttach(Context context) {
         inject();
         super.onAttach(context);
         this.context = context;
@@ -84,38 +78,33 @@ public abstract class BaseFragment<V extends MvpView> extends Fragment implement
             this.mActivity = (BaseActivity) context;
             mActivity.onFragmentAttached();
         }
-        initPresenter();
     }
-
+    
+    protected abstract int getLayoutId();
+    
     protected void inject() {
         AndroidSupportInjection.inject(this);
     }
-
-
-    private void initPresenter() {
-        basePresenter = getPresenter();
+    
+    protected abstract void initView();
+    
+    final protected void initPresenter(MvpPresenter<V> presenter, V v) {
+        basePresenter = presenter;
+        presenter.bindView(v);
+        presenterView = new WeakReference<>(v);
     }
-
-    protected abstract MvpPresenter<V> getPresenter();
-
-    protected abstract V getPresenterView();
-
-    protected abstract int getLayoutId();
-    protected  abstract void initView();
-
-    @Override
-    public void onResume() {
+    
+    @Override public void onResume() {
         super.onResume();
         isDestroyedBySystem = false;
     }
-
-    @Override
-    public void onStop() {
-
+    
+    @Override public void onStop() {
+        
         if (basePresenter != null) {
             basePresenter.unbindView();
         }
-
+        
         if (progressDialog != null && progressDialog.isShowing()) {
             progressDialog.dismiss();
         }
@@ -127,24 +116,20 @@ public abstract class BaseFragment<V extends MvpView> extends Fragment implement
         }
         super.onStop();
     }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
+    
+    @Override public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         isDestroyedBySystem = true;
     }
-
-
-    @Override
-    public void onDestroyView() {
+    
+    @Override public void onDestroyView() {
         super.onDestroyView();
         if (basePresenter != null) {
             basePresenter.destroy();
         }
     }
-
-    @Override
-    public void onDestroy() {
+    
+    @Override public void onDestroy() {
         super.onDestroy();
         if (!isDestroyedBySystem) {
             if (basePresenter != null) {
@@ -152,96 +137,82 @@ public abstract class BaseFragment<V extends MvpView> extends Fragment implement
             }
         }
     }
-
-
-    @Override
-    public void onError(String message) {
+    
+    @Override public void onError(String message) {
         if (mActivity != null) {
             mActivity.onError(message);
         }
     }
-
-    @Override
-    public void onError(@StringRes int resId) {
+    
+    @Override public void onError(@StringRes int resId) {
         if (mActivity != null) {
             mActivity.onError(resId);
         }
     }
-
-    @Override
-    public boolean isNetworkConnected() {
+    
+    @Override public boolean isNetworkConnected() {
         if (mActivity != null) {
             return mActivity.isNetworkConnected();
         }
         return false;
     }
-
-    @Override
-    public void onDetach() {
+    
+    @Override public void onDetach() {
         mActivity = null;
         super.onDetach();
     }
-
-    @Override
-    public void hideKeyboard() {
+    
+    @Override public void hideKeyboard() {
         if (mActivity != null) {
             mActivity.hideKeyboard();
         }
     }
-
-
+    
     public BaseActivity getBaseActivity() {
         return mActivity;
     }
-
+    
     //public void setUnBinder(Unbinder unBinder) {
     //    mUnBinder = unBinder;
     //}
-
-    @Override
-    public void showProgressDialog(String message) {
+    
+    @Override public void showProgressDialog(String message) {
         if (getActivity() != null) {
             progressDialog = ProgressDialog.show(getActivity(), "", message, true);
             progressDialog.setCanceledOnTouchOutside(false);
             progressDialog.setCancelable(false);
         }
     }
-
-    @Override
-    public void showProgressDialog(String message, DialogInterface.OnCancelListener onCancelListener) {
+    
+    @Override public void showProgressDialog(String message, DialogInterface.OnCancelListener onCancelListener) {
         if (getActivity() != null) {
             progressDialog = ProgressDialog.show(getActivity(), "", message, true, true, onCancelListener);
             progressDialog.setCanceledOnTouchOutside(true);
         }
     }
-
-    @Override
-    public void dismissProgressDialog() {
+    
+    @Override public void dismissProgressDialog() {
         if (getActivity() != null && progressDialog != null && progressDialog.isShowing()) {
             progressDialog.dismiss();
         }
-
     }
-
-    @Override
-    public void showDialog(Dialog dialog) {
+    
+    @Override public void showDialog(Dialog dialog) {
         if (getActivity() != null) {
             this.dialogs.add(dialog);
             dialog.show();
         }
     }
-
-    @Override
-    public void showDialog(Dialog dialog, DialogInterface.OnCancelListener onCancelListener) {
+    
+    @Override public void showDialog(Dialog dialog, DialogInterface.OnCancelListener onCancelListener) {
         if (getActivity() != null) {
             this.dialogs.add(dialog);
             dialog.setOnCancelListener(onCancelListener);
             dialog.show();
         }
     }
-
-    @Override
-    public void dismissAllDialogs() {
+    
+    @Override public void dismissAllDialogs() {
         while (dialogs.size() > 0) {
             Dialog dialog = dialogs.remove(dialogs.size() - 1);
             if (dialog != null && dialog.isShowing()) {
@@ -250,19 +221,18 @@ public abstract class BaseFragment<V extends MvpView> extends Fragment implement
             }
         }
     }
-
-    @Override
-    public void dismissDialog(Dialog dialog) {
+    
+    @Override public void dismissDialog(Dialog dialog) {
         if (dialogs.contains(dialog)) {
             dialogs.remove(dialog);
         }
         dialog.dismiss();
     }
-
+    
     public interface Callback {
-
+        
         void onFragmentAttached();
-
+        
         void onFragmentDetached(String tag);
     }
 }
