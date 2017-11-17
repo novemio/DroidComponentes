@@ -8,7 +8,6 @@ import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.support.annotation.IdRes;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
@@ -46,19 +45,15 @@ public abstract class BaseActivity<V extends MvpView> extends AppCompatActivity
     private FragmentManager fragmentManager;
     
     @Override protected void onCreate(Bundle savedInstanceState) {
+        injectMembers();
         super.onCreate(savedInstanceState);
         setContentView(getLayoutId());
-        injectMembers();
         dialogArrayList = new ArrayList<Dialog>(1);
         fragmentManager = getSupportFragmentManager();
+        initView();
     }
     
     protected abstract int getLayoutId();
-    
-    @Override public void onPostCreate(@Nullable Bundle savedInstanceState, @Nullable PersistableBundle persistentState) {
-        super.onPostCreate(savedInstanceState, persistentState);
-        initView();
-    }
     
     protected abstract void initView();
     
