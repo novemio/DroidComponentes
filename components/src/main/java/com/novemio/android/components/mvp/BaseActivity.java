@@ -28,7 +28,6 @@ import dagger.android.support.HasSupportFragmentInjector;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import javax.inject.Inject;
-import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
 /**
  * Created by xix on 27/03/17.
@@ -102,10 +101,6 @@ public abstract class BaseActivity<V extends MvpView> extends AppCompatActivity
         if (basePresenter != null) {
             basePresenter.destroy();
         }
-    }
-    
-    @Override protected void attachBaseContext(Context newBase) {
-        super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
     }
     
     @TargetApi(Build.VERSION_CODES.M) public void requestPermissionsSafely(String[] permissions, int requestCode) {
