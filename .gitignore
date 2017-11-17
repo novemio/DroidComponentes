@@ -1,0 +1,42 @@
+*.iml
+.gradle
+/local.properties
+/.idea/workspace.xml
+/.idea/libraries
+.DS_Store
+/build
+/captures
+
+# User-specific stuff:
+.idea/**/tasks.xml
+.idea/dictionaries
+.idea/dbnavigator.xml
+.idea/markdown-navigator/
+.idea/runConfigurations.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/encodings.xml
+.idea/markdown-navigator.xml
+.idea/vcs.xml
+
+# Sensitive or high-churn files:
+
+.idea/**/dataSources/
+.idea/**/dataSources.ids
+.idea/**/dataSources.xml
+.idea/**/dataSources.local.xml
+.idea/**/sqlDataSources.xml
+.idea/**/dynamic.xml
+.idea/**/uiDesigner.xml
+.idea/compiler.xml
+.idea/json2class_settings.xml
+.idea/json2java.xml
+
+# Gradle:
+.idea/**/gradle.xml
+# Secret files
+config/signing/releaseKeystore.properties
+*jks
+*.keystore
+
+
